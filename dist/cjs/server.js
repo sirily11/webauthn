@@ -22,14 +22,11 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.verifySignature = exports.verifyAuthentication = exports.verifyRegistration = void 0;
 const parsers_js_1 = require("./parsers.js");
 const utils = __importStar(require("./utils.js"));
-const crypto_1 = __importDefault(require("crypto"));
+const crypto = __importStar(require("crypto"));
 async function isValid(validator, value) {
     if (typeof validator === 'function') {
         const res = validator(value);
@@ -120,7 +117,7 @@ function getAlgoParams(algorithm) {
 }
 async function parseCryptoKey(algoParams, publicKey) {
     const buffer = utils.parseBase64url(publicKey);
-    return crypto_1.default.subtle.importKey('spki', buffer, algoParams, false, ['verify']);
+    return crypto.subtle.importKey('spki', buffer, algoParams, false, ['verify']);
 }
 // https://w3c.github.io/webauthn/#sctn-verifying-assertion
 // https://w3c.github.io/webauthn/#sctn-signature-attestation-types
@@ -148,7 +145,7 @@ async function verifySignature({ algorithm, publicKey, authenticatorData, client
     let signatureBuffer = utils.parseBase64url(signature);
     if (algorithm == 'ES256')
         signatureBuffer = convertASN1toRaw(signatureBuffer);
-    const isValid = await crypto_1.default.subtle.verify(algoParams, cryptoKey, signatureBuffer, comboBuffer);
+    const isValid = await crypto.subtle.verify(algoParams, cryptoKey, signatureBuffer, comboBuffer);
     return isValid;
 }
 exports.verifySignature = verifySignature;
