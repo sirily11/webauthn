@@ -1,6 +1,9 @@
 /********************************
      Encoding/Decoding Utils
 ********************************/
+import * as cryptolib from "crypto";
+
+const crypto = cryptolib.webcrypto;
 
 /*
 let webCrypto :any = null
