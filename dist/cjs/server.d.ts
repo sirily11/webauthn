@@ -18,5 +18,5 @@ type VerifyParams = {
     clientData: string;
     signature: string;
 };
-export declare function verifySignature({ algorithm, publicKey, authenticatorData, clientData, signature }: VerifyParams): Promise<boolean>;
+export declare function verifySignature({ algorithm, publicKey, authenticatorData, clientData, signature, }: VerifyParams): Promise<boolean>;
 export {};

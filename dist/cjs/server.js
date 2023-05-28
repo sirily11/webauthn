@@ -26,9 +26,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.verifySignature = exports.verifyAuthentication = exports.verifyRegistration = void 0;
 const parsers_js_1 = require("./parsers.js");
 const utils = __importStar(require("./utils.js"));
-const crypto = __importStar(require("crypto"));
+const cryptolib = __importStar(require("crypto"));
+const crypto = cryptolib.webcrypto;
 async function isValid(validator, value) {
-    if (typeof validator === 'function') {
+    if (typeof validator === "function") {
         const res = validator(value);
         if (res instanceof Promise)
             return await res;
@@ -61,7 +62,7 @@ async function verifyAuthentication(authenticationRaw, credential, expected) {
         publicKey: credential.publicKey,
         authenticatorData: authenticationRaw.authenticatorData,
         clientData: authenticationRaw.clientData,
-        signature: authenticationRaw.signature
+        signature: authenticationRaw.signature,
     });
     if (!isValidSignature)
         throw new Error(`Invalid signature: ${authenticationRaw.signature}`);
@@ -99,16 +100,16 @@ User agents MUST be able to return a non-null value for getPublicKey() when the 
 */
 function getAlgoParams(algorithm) {
     switch (algorithm) {
-        case 'RS256':
+        case "RS256":
             return {
-                name: 'RSASSA-PKCS1-v1_5',
-                hash: 'SHA-256'
+                name: "RSASSA-PKCS1-v1_5",
+                hash: "SHA-256",
             };
-        case 'ES256':
+        case "ES256":
             return {
-                name: 'ECDSA',
-                namedCurve: 'P-256',
-                hash: 'SHA-256',
+                name: "ECDSA",
+                namedCurve: "P-256",
+                hash: "SHA-256",
             };
         // case 'EdDSA': Not supported by browsers
         default:
@@ -117,7 +118,7 @@ function getAlgoParams(algorithm) {
 }
 async function parseCryptoKey(algoParams, publicKey) {
     const buffer = utils.parseBase64url(publicKey);
-    return crypto.subtle.importKey('spki', buffer, algoParams, false, ['verify']);
+    return crypto.subtle.importKey("spki", buffer, algoParams, false, ["verify"]);
 }
 // https://w3c.github.io/webauthn/#sctn-verifying-assertion
 // https://w3c.github.io/webauthn/#sctn-signature-attestation-types
@@ -130,20 +131,20 @@ async function parseCryptoKey(algoParams, publicKey) {
 [...] For COSEAlgorithmIdentifier -37 (PS256) [...] The signature is not ASN.1 wrapped.
 */
 // see also https://gist.github.com/philholden/50120652bfe0498958fd5926694ba354
-async function verifySignature({ algorithm, publicKey, authenticatorData, clientData, signature }) {
+async function verifySignature({ algorithm, publicKey, authenticatorData, clientData, signature, }) {
     const algoParams = getAlgoParams(algorithm);
     let cryptoKey = await parseCryptoKey(algoParams, publicKey);
     console.debug(cryptoKey);
     let clientHash = await utils.sha256(utils.parseBase64url(clientData));
     // during "login", the authenticatorData is exactly 37 bytes
     let comboBuffer = utils.concatenateBuffers(utils.parseBase64url(authenticatorData), clientHash);
-    console.debug('Crypto Algo: ' + JSON.stringify(algoParams));
-    console.debug('Public key: ' + publicKey);
-    console.debug('Data: ' + utils.toBase64url(comboBuffer));
-    console.debug('Signature: ' + signature);
+    console.debug("Crypto Algo: " + JSON.stringify(algoParams));
+    console.debug("Public key: " + publicKey);
+    console.debug("Data: " + utils.toBase64url(comboBuffer));
+    console.debug("Signature: " + signature);
     // https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/verify
     let signatureBuffer = utils.parseBase64url(signature);
-    if (algorithm == 'ES256')
+    if (algorithm == "ES256")
         signatureBuffer = convertASN1toRaw(signatureBuffer);
     const isValid = await crypto.subtle.verify(algoParams, cryptoKey, signatureBuffer, comboBuffer);
     return isValid;
